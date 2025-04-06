@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import axios from "axios";
 
 export const AuthContext = createContext();
@@ -18,17 +18,11 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const login = async (username, password, callback) => {
-    if (username === "admin" && password === "1") {
-      setIsAuthenticated(true);
-      callback();
-    } else {
-      alert("Invalid credentials");
-    }
     try {
-      const response = await axios.post("https://f7a8c79a71aab280.mokky.dev/Tovary", {
-        username,
-        password,
-      });
+      const response = await axios.post(
+        "https://f7a8c79a71aab280.mokky.dev/auth",
+        { username, password }
+      );
 
       const authToken = response.data.token;
       setToken(authToken);
@@ -38,6 +32,20 @@ export const AuthProvider = ({ children }) => {
       if (callback) callback();
     } catch (error) {
       console.error("Login failed", error);
+      alert("Login failed! Please check your username and password.");
+    }
+  };
+
+  const register = async (username, password) => {
+    try {
+      await axios.post("https://f7a8c79a71aab280.mokky.dev/register", {
+        username,
+        password,
+      });
+      alert("Registration successful! You can now log in.");
+    } catch (error) {
+      console.error("Registration failed", error);
+      alert("Registration failed! Please try again.");
     }
   };
 
@@ -49,7 +57,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated, login, logout }}>
+    <AuthContext.Provider
+      value={{ token, isAuthenticated, login, register, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

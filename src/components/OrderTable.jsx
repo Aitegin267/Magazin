@@ -12,26 +12,41 @@ import {
 import { styled } from "@mui/material";
 import Header from "./Header";
 import PaymentModal from "./PaymentModal";
+import { TiTick } from "react-icons/ti";
+import { TiTimes } from "react-icons/ti";
 
 function App() {
   const [appState, setAppState] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [totalPaid, setTotalPaid] = useState(0);
   const [selectedPrice, setSelectedPrice] = useState(null);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [totalAmount, setTotalAmount] = useState(0);
 
-  useEffect(() => {
+  const getTovary = async () => {
     const apiUrl = "https://f7a8c79a71aab280.mokky.dev/Tovary";
-    axios.get(apiUrl).then((resp) => {
+    await axios.get(apiUrl).then((resp) => {
       const updatedData = resp.data.map((item) => ({
         ...item,
         price: Number(item.price),
       }));
+      const totalOfCash = updatedData.reduce((prev, next) => {
+        if (next.isPaid) {
+          return prev + next.price;
+        }
+        return prev;
+      }, 0);
+      setTotalAmount(totalOfCash);
       setAppState(updatedData);
     });
+  };
+
+  useEffect(() => {
+    getTovary();
   }, []);
 
-  const handleBuyClick = (price) => {
-    setSelectedPrice(price);
+  const handleBuyClick = (order) => {
+    setSelectedPrice(order.price);
+    setSelectedOrderId(order.id);
     setIsModalOpen(true);
   };
 
@@ -39,14 +54,20 @@ function App() {
     setIsModalOpen(false);
   };
 
-  const handlePayment = (amount) => {
-    setTotalPaid((prev) => prev + amount);
+  const handlePayment = async (amount) => {
+    await axios.patch(
+      `https://f7a8c79a71aab280.mokky.dev/Tovary/${selectedOrderId}`,
+      {
+        isPaid: true,
+      }
+    );
+    getTovary();
     setIsModalOpen(false);
   };
 
   return (
     <StyledContainer>
-      <Header user={`Оплачено: ${totalPaid} $`} />
+      <Header user={`Оплачено: ${totalAmount} $`} />
       {isModalOpen && (
         <PaymentModal
           open={isModalOpen}
@@ -62,6 +83,7 @@ function App() {
               <TableCell>Название</TableCell>
               <TableCell>КГ</TableCell>
               <TableCell>Цена</TableCell>
+              <TableCell>Статус</TableCell>
               <TableCell>Действие</TableCell>
             </TableRow>
           </TableHead>
@@ -72,8 +94,28 @@ function App() {
                 <TableCell>{order.kg}</TableCell>
                 <TableCell>{order.price}</TableCell>
                 <TableCell>
-                  <StyledButton variant="contained" onClick={() => handleBuyClick(order.price)}>
-                    Купить
+                  {order.isPaid ? (
+                    <span style={{ color: "green" }}>
+                      <TiTick /> Оплачено
+                    </span>
+                  ) : (
+                    <span style={{ color: "red" }}>
+                      <TiTimes /> Не оплачено
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <StyledButton
+                    variant="contained"
+                    onClick={() => handleBuyClick(order)}
+                    disabled={order.isPaid}
+                    style={{
+                      backgroundColor: order.isPaid
+                        ? "green"
+                        : "rgb(243, 114, 22)",
+                    }}
+                  >
+                    {order.isPaid ? "Оплачено" : "Купить"}
                   </StyledButton>
                 </TableCell>
               </TableRow>
@@ -87,8 +129,7 @@ function App() {
 
 export default App;
 
-const StyledButton = styled(Button)( {
-  backgroundColor: "rgb(243, 114, 22)",
+const StyledButton = styled(Button)({
   color: "white",
   fontSize: "15px",
   borderRadius: "50px",
@@ -111,7 +152,7 @@ const StyledContainer = styled(Container)({
   justifyContent: "center",
   alignItems: "center",
   flexDirection: "column",
-  marginTop: "300px", 
+  marginTop: "300px",
   padding: "20px",
   width: "100%",
   maxWidth: "100%",
@@ -119,4 +160,4 @@ const StyledContainer = styled(Container)({
   backgroundColor: "white",
   borderRadius: "30px",
   border: "solid 4px black",
-});  
+});

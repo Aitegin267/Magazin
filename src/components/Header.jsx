@@ -1,4 +1,4 @@
-import { AppBar, Input, Toolbar, Typography } from "@mui/material";
+import { AppBar,Toolbar, Typography } from "@mui/material";
 import { TiThMenu } from "react-icons/ti";
 
 const Header = ({ user }) => {
@@ -18,6 +18,7 @@ const Header = ({ user }) => {
           <TiThMenu style={{ cursor: "pointer", fontFamily:"unset" }} />
           Строительный магазин
         </Typography>
+        
 
         <Typography>{user}</Typography>
       </Toolbar>

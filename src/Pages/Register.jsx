@@ -1,20 +1,22 @@
 import React, { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { Container, TextField, Button, Box, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
-const Login = () => {
+const Register = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useContext(AuthContext);
+  const { register } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleLogin = () => {
-    login(username, password, () => navigate("/orders"));
-  };
+  const handleRegister = async () => {
+    if (!username || !password) {
+      alert("Пожалуйста, заполните все поля");
+      return;
+    }
 
-  const handleGoToRegister = () => {
-    navigate("/register");
+    await register(username, password);
+    navigate("/login");
   };
 
   return (
@@ -29,7 +31,7 @@ const Login = () => {
         }}
       >
         <Typography variant="h5" align="center" gutterBottom>
-          Login
+          Register
         </Typography>
         <TextField
           fullWidth
@@ -48,23 +50,28 @@ const Login = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+
         <Button
           fullWidth
           variant="contained"
           color="primary"
-          onClick={handleLogin}
+          onClick={handleRegister}
           sx={{ mt: 2 }}
         >
-          Войти
+          Register
         </Button>
         <br />
         <br />
-        <Button fullWidth variant="outlined" onClick={handleGoToRegister}>
-          Зарегистрироваться
+        <Button
+          fullWidth
+          variant="outlined"
+          onClick={() => navigate("/login")}
+        >
+          Назад к входу
         </Button>
       </Box>
     </Container>
   );
 };
 
-export default Login;
+export default Register;
